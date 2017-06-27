@@ -1,0 +1,52 @@
+#! /bin/sh
+
+sleep 1
+
+textlast=0
+text1=0
+
+sudo echo `date` "_gmail start" >> '/home/user/Рабочий стол/hello'
+
+i=0; while [ 1 ]; 
+do 
+	
+	#text1=$(ifconfig teredo| grep 'inet6 addr'| sed 's/inet6 addr: //g;s/\/32 Scope.*//g; s/.*64 Scope:Link//g'|sed 's/^[ \t]*//;s/[ \t]*$//')
+	text1=`ifconfig teredo|grep -E -o "([0-9abcdef]{1,4}[\:\/]){7}[0-9abcdef]{1,4}" | sed "s/\///g"`
+	
+	if [ "$text1" = "" ]; then
+		sudo echo `date` "miredo not work; miredo restart" >> '/home/user/Рабочий стол/hello'
+		echo miredo restart
+		sudo killall miredo
+		sudo miredo
+	else
+		if [ "$text1" = "$textlast" ]
+		then echo $text1; sudo echo "error 2" >> '/home/user/Рабочий стол/hello'
+			
+		elif [ "$text1" = "" ]
+		then echo error; sudo miredo;  sudo echo "error 1" >> '/home/user/Рабочий стол/hello'
+				
+		else
+		    echo "!="		
+			STATUS=`ping 8.8.8.8 -c 1 -w 2 | grep " 1 received"`
+			if ["$STATUS" = ""]; then
+				echo "Интернета нет"
+			else
+				textlast=$text1
+				repars=`curl -u POCHTA@gmail.com:PASSWORD --silent "https://mail.google.com/mail/feed/atom" | tr -d '\n' | sed -r -n "s/$(uname -n) ipv6<\/title>.{10,80}<\/summary>/Dqpir520dejnffjsp945&56ugdrfgteyr6ui7FDNI458jh/p"  | sed -r "s/<\/summary>56ugdrfgteyr6ui7FDNI458jh.*//1g" | sed "s/.*ipv6<\/title><summary>//1g"`
+				if [ "$repars" = "$text1" ]; then
+					sudo echo `date` "ipv6 уже есть на почте; Отправлять не требуется" >> '/home/user/Рабочий стол/hello'
+				else
+					echo "Отправляем ipv6"
+					
+					sudo -u user '/usr/sbin/SendIpAdressToGmail.sh'&
+					sudo echo `date` "оправили ipv6 " $text1 >> '/home/user/Рабочий стол/hello'
+				fi
+			
+			fi
+		fi	
+	fi
+	sleep 60
+done;
+
+
+exit 0
